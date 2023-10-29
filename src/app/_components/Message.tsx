@@ -4,7 +4,7 @@ type MessageProps = {
   message: {
     content: string;
     role: string;
-    createdAt: string;
+    createdAt: Date;
     id: string;
   };
 };

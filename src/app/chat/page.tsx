@@ -27,7 +27,7 @@ export default function Chat() {
     <main className="flex h-full border justify-center">
       <div className="flex flex-col border w-full justify-between">
         <div className="flex flex-col">
-        {mockMessages.map((message) => (
+        {messages.map((message) => (
             <Message key={message.id} message={message} />
         ))}
         </div>
