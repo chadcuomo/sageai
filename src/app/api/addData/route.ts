@@ -1,6 +1,6 @@
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { type NextRequest, NextResponse } from "next/server";
-import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone"; // Import Pinecone from the new package
+import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone"; 
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -8,74 +8,73 @@ import { getEmbeddings } from "~/app/utils/embeddings";
 import md5 from "md5";
 import { env } from "~/env.mjs";
 import { chunkedUpsert } from "~/app/utils/chunkedUpsert";
+import nlp from 'compromise';  // Add this import for NLP functionality
 
+function chunkString(str: string, length: number) {
+  const size = Math.ceil(str.length / length);
+  const chunks = new Array(size);
+  let index = 0;
 
-async function embedDocument(doc: Document, bookTitle: string): Promise<PineconeRecord> {
-    try {
-      const embedding = await getEmbeddings(doc.pageContent);
-      const hash = md5(doc.pageContent);
-  
+  for (let i = 0; i < size; i++) {
+    chunks[i] = str.slice(index, index + length);
+    index += length;
+  }
+  return chunks;
+}
+
+async function embedDocument(doc: Document, bookTitle: string, author: string): Promise<PineconeRecord[]> {
+  try {
+    const chunks = chunkString(doc.pageContent, 1000);  // 500 is your chunk size
+    const chunkVectors = chunks.map(async (chunk) => {
+      const embedding = await getEmbeddings(chunk);
+      const uniqueId = `${md5(chunk)}-${new Date().toISOString()}`;
+      
       return {
-        id: hash,
+        id: uniqueId,
         values: embedding,
         metadata: {
-          chunk: doc.pageContent,
+          chunk: chunk,
           text: doc.metadata.text as string,
           bookTitle,
-          hash: doc.metadata.hash as string
+          author
         }
       } as PineconeRecord;
-    } catch (error) {
-      console.log("Error embedding document: ", error)
-      throw error;
-    }
+    });
+    return await Promise.all(chunkVectors);
+  } catch (error) {
+    console.error("Error embedding document:", error);
+    throw error;
   }
-
+}
 export async function POST(request: NextRequest) {
-  // Extract FormData from the request
   const data = await request.formData();
-  // Extract the uploaded file from the FormData
   const file: File | null = data.get("file") as unknown as File;
+  const bookTitle: string | null = data.get("bookTitle") as unknown as string;
+  const author: string | null = data.get("author") as unknown as string;
 
-  // Make sure file exists
   if (!file) {
     return NextResponse.json({ success: false, error: "No file found" });
   }
 
-  // Make sure the file is a PDF
   if (file.type !== "application/pdf") {
     return NextResponse.json({ success: false, error: "Invalid file type" });
   }
 
-  // Use the PDFLoader to load the PDF 
   const pdfLoader = new PDFLoader(file);
-
-    // Use the PDFLoader to split the PDF into documents
   const splitDocuments = await pdfLoader.loadAndSplit();
 
-//   console.log(splitDocuments)
+  const pinecone = new Pinecone();
+  const pineconeIndex = pinecone.Index(env.PINECONE_INDEX_NAME);
 
-// Instantiate a new Pinecone client, which will automatically read the
-// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
-// the Pinecone dashboard at https://app.pinecone.io
-
-const pinecone = new Pinecone();
-
-const pineconeIndex = pinecone.Index(env.PINECONE_INDEX_NAME);
-
-  // Use Langchain's integration with Pinecone to store the documents
-//   await PineconeStore.fromDocuments(splitDocuments, new OpenAIEmbeddings(), {
-//     pineconeIndex,
-//   });
-try {
-    const vectors = await Promise.all(splitDocuments.flat().map(document => embedDocument(document, 'atomic habits')));
-    await chunkedUpsert(pineconeIndex, vectors, '', 10);
+  try {
+    console.log("Attempting to embed and upsert documents...");
+    const vectors = await Promise.all(splitDocuments.flat().map(async document => await embedDocument(document, bookTitle, author)));
+    const flattenedVectors = vectors.flat();
+    await chunkedUpsert(pineconeIndex, flattenedVectors, '', 10);
+    console.log("Successfully embedded and upserted documents.");
     return NextResponse.json({ success: true });
-    // console.log(vectors)
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Failed POST request. Error:", error);
     return NextResponse.json({ success: false, error: "Failed to add data" });
   }
-
-//   return NextResponse.json({ success: true });
 }

@@ -5,21 +5,6 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 import Message from "../_components/Message";
 
-const mockMessages = [
-    {
-        content: "Can you give me a brief summary of the book?",
-        role: "user",
-        createdAt: "2023-10-29T00:12:19.964Z",
-        id: "Zqx2B4E"
-    },
-    {
-        id: "a5S0tGr",
-        createdAt: "2023-10-29T00:12:23.069Z",
-        content: "Certainly! \"Atomic Habits\" by James Clear is a self-help book that explores the power of small habits and how they can have a significant impact on our lives. The book provides a step-by-step framework for creating and maintaining good habits, as well as breaking bad ones. Clear emphasizes the importance of the \"atomic\" nature of habits, meaning that they are small and incremental actions that compound over time. By focusing on the process of habit formation, rather than just the end result, Clear shows readers how to make lasting changes in their behavior and achieve long-term success. The book also delves into the psychology behind habits and provides practical strategies for overcoming common obstacles. Overall, \"Atomic Habits\" offers actionable advice and insights to help readers transform their lives by harnessing the power of small habits.",
-        role: "assistant"
-    }
-]
-
 export default function Chat() {
     const { messages, input, handleInputChange, handleSubmit } = useChat();
     
