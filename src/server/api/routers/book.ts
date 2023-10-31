@@ -24,4 +24,24 @@ export const bookRouter = createTRPCRouter({
         console.log(error)
     }
     }),
+    //private procedure to get all books
+    getAllBooks: publicProcedure.query(({ ctx }) => {
+      return ctx.db.book.findMany();
+    }
+    ),
+    // procedure to get a single book based on id
+    getBook: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(({ ctx, input }) => {
+      return ctx.db.book.findUnique({
+        where: {
+          id: input.id,
+        },
+      });
+    }
+    ),
 });

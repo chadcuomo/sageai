@@ -9,13 +9,15 @@ export type Metadata = {
 }
 
 // The function `getContext` is used to retrieve the context of a given message
-export const getContext = async (message: string, namespace: string, maxTokens = 3000, minScore = 0.7, getOnlyText = true): Promise<string | ScoredPineconeRecord[]> => {
-
+export const getContext = async (message: string, namespace: string, bookTitle: string): Promise<string | ScoredPineconeRecord[]> => {
+ const maxTokens = 3000
+ const minScore = 0.7
+ const getOnlyText = true
   // Get the embeddings of the input message
   const embedding = await getEmbeddings(message);
 
   // Retrieve the matches for the embeddings from the specified namespace
-  const matches = await getMatchesFromEmbeddings(embedding, 3, namespace);
+  const matches = await getMatchesFromEmbeddings(embedding, 3, namespace, bookTitle);
 
   // Filter out the matches that have a score lower than the minimum score
   const qualifyingDocs = matches.filter(m => m.score && m.score > minScore);
