@@ -19,41 +19,42 @@ export default function UploadPdf() {
     },
   });
   // When a file is dropped in the dropzone, call the `/api/addData` API to train our bot on a new PDF File
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
 
-    if (file.type !== "application/pdf") {
-      alert("Please upload a PDF");
-      return;
-    }
+      if (file.type !== "application/pdf") {
+        alert("Please upload a PDF");
+        return;
+      }
 
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("bookTitle", bookTitle);
-    formData.set("author", author);
+      const formData = new FormData();
+      formData.set("file", file);
+      formData.set("bookTitle", bookTitle);
+      formData.set("author", author);
 
-    const response = await fetch("/api/addData", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/addData", {
+        method: "POST",
+        body: formData,
+      });
 
-    const body = await response.json();
+      const body = await response.json();
 
-    if (body.success) {
-      addBook.mutate({ bookTitle, author, image: coverImg });
-      alert(`Successfully added ${bookTitle} by ${author}`);
-    }
-  }, [addBook, author, bookTitle, coverImg]);
+      if (body.success) {
+        addBook.mutate({ bookTitle, author, image: coverImg });
+        alert(`Successfully added ${bookTitle} by ${author}`);
+      }
+    },
+    [addBook, author, bookTitle, coverImg],
+  );
 
   // Configure react-dropzone
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
   });
 
-  console.log(bookTitle, author, coverImg);
-
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
+    <main className="flex flex-col items-center p-24">
       <TextInput
         label="Book Title"
         value="bookTitle"

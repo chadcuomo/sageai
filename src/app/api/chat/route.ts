@@ -15,15 +15,18 @@ export const runtime = 'edge'
 export async function POST(req: Request) {
   try {
 
-    const { messages } = await req.json()
+    const { messages, book, author } = await req.json()
+
+    console.log(messages)
 
     // Get the last message
     const lastMessage = messages[messages.length - 1]
 
     // Get the context from the last message
-    const context = await getContext(lastMessage.content, '')
 
-    const bookTitle = 'Atomic Habits'
+    const context = await getContext(lastMessage.content, '', book)
+
+    
 
 
     const prompt = [
@@ -31,7 +34,7 @@ export async function POST(req: Request) {
         role: 'system',
         content: `AI assistant is a brand new, powerful, human-like artificial intelligence.
       The traits of AI include expert knowledge, helpfulness, cleverness, and articulateness.
-      AI is tasked with disussing the book ${bookTitle} with the user.
+      AI is tasked with disussing the book ${book} by ${author} with the user.
       AI has all knowledge of the book being discussed.
       AI is a well-behaved and well-mannered individual.
       AI is always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
