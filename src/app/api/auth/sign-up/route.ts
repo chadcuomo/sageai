@@ -2,6 +2,9 @@ import { createClient } from '~/app/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
+import { db } from '~/server/db'
+import { createUserInDatabase } from '../../../utils/dbUtils'
+
 export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
   const formData = await request.formData()
@@ -10,13 +13,17 @@ export async function POST(request: Request) {
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${requestUrl.origin}/api/auth/callback`,
     },
   })
+
+  if (data.user) {
+    await createUserInDatabase(db, data.user.id, data.user.email);
+  }
 
   if (error) {
     return NextResponse.redirect(

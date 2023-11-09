@@ -21,6 +21,10 @@ export const env = createEnv({
       PINECONE_API_KEY: z.string().default(""),
       PINECONE_INDEX_NAME: z.string().default(""),
       PINECONE_ENVIRONMENT: z.string().default(""),
+      STRIPE_PK: z.string(),
+      STRIPE_SK: z.string(),
+      STRIPE_PRICE_ID: z.string(),
+      STRIPE_WEBHOOK_SECRET: z.string(),
   },
 
   /**
@@ -43,6 +47,10 @@ export const env = createEnv({
     PINECONE_API_KEY: process.env.PINECONE_API_KEY,
     PINECONE_INDEX_NAME: process.env.PINECONE_INDEX_NAME,
     PINECONE_ENVIRONMENT: process.env.PINECONE_ENVIRONMENT,
+    STRIPE_PK: process.env.STRIPE_PK,
+    STRIPE_SK: process.env.STRIPE_SK,
+    STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
