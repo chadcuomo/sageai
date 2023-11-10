@@ -32,8 +32,8 @@ export const stripeRouter = createTRPCRouter({
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/`,
-      cancel_url: `${baseUrl}/`,
+      success_url: `${baseUrl}/dashboard`,
+      cancel_url: `${baseUrl}/dashboard`,
       subscription_data: {
         metadata: {
           userId: auth?.id,
