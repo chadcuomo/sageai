@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
     createUser: publicProcedure
@@ -21,6 +21,25 @@ export const userRouter = createTRPCRouter({
         console.log(error);
       }
     }),
+    getUser: protectedProcedure.query(async ({ ctx }) => {
+        const { auth, db } = ctx;
+    
+        if (!auth) {
+            throw new Error("Not authenticated");
+        }
+    
+        const data = await db.user.findUnique({
+            where: {
+            userId: auth.id,
+            },
+        });
+    
+        if (!data) {
+            throw new Error("Could not find user");
+        }
+    
+        return data;
+        }),
   subscriptionStatus: publicProcedure.query(async ({ ctx }) => {
     const { auth, db} = ctx;
 
@@ -30,7 +49,7 @@ export const userRouter = createTRPCRouter({
 
     const data = await db.user.findUnique({
       where: {
-        id: db.user?.id,
+        userId: auth.id,
       },
       select: {
         stripeSubscriptionStatus: true,

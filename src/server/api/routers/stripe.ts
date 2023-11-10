@@ -9,7 +9,7 @@ export const stripeRouter = createTRPCRouter({
     const customerId = await getOrCreateStripeCustomerIdForUser({
       prisma: db,
       stripe,
-      userId: db.user?.id,
+      userId: auth?.id,
     });
 
     if (!customerId) {
@@ -23,7 +23,7 @@ export const stripeRouter = createTRPCRouter({
 
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
-      client_reference_id: db.user?.id,
+      client_reference_id: auth?.id,
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
@@ -32,11 +32,11 @@ export const stripeRouter = createTRPCRouter({
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/dashboard?checkoutSuccess=true`,
-      cancel_url: `${baseUrl}/dashboard?checkoutCanceled=true`,
+      success_url: `${baseUrl}/`,
+      cancel_url: `${baseUrl}/`,
       subscription_data: {
         metadata: {
-          userId: db.user?.id,
+          userId: auth?.id,
         },
       },
     });
@@ -53,7 +53,7 @@ export const stripeRouter = createTRPCRouter({
     const customerId = await getOrCreateStripeCustomerIdForUser({
       prisma: db,
       stripe,
-      userId: db.user?.id,
+      userId: auth?.id,
     });
 
     if (!customerId) {

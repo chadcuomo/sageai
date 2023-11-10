@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { db as prisma } from "~/server/db";
 import type Stripe from "stripe";
-import { buffer } from "micro";
+
 import {
   handleInvoicePaid,
   handleSubscriptionCanceled,
@@ -24,13 +24,15 @@ export async function POST(
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
-    const buf = await buffer(req);
-    const sig = req.headers["stripe-signature"];
+    // const buf = await buffer(req);
+    const body = await req.text();
+    // const sig = req.headers.get('stripe-signature') as string;
+    const sig = req.headers.get("stripe-signature") as string;
 
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(buf, sig as string, webhookSecret);
+      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
 
       // Handle the event
       switch (event.type) {
@@ -86,7 +88,7 @@ export async function POST(
           account: event.account,
           created: new Date(event.created * 1000), // convert to milliseconds
           data: {
-            object: event.data.object,
+            object: JSON.stringify(event.data.object),
             previous_attributes: event.data.previous_attributes,
           },
           livemode: event.livemode,
@@ -98,13 +100,15 @@ export async function POST(
         },
       });
 
-      res.json({ received: true });
+      return new Response(JSON.stringify({ received: true }));
     } catch (err) {
-      res.status(400).send(err);
-      return;
+      console.error('Error in Stripe webhook:', err);
+      return new Response('Webhook handler failed. View logs.', {
+        status: 400
+      });
     }
   } else {
     res.setHeader("Allow", "POST");
-    res.status(405).end("Method Not Allowed");
+    return new Response(JSON.stringify({ received: true }));
   }
 }

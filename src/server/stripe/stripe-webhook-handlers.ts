@@ -13,7 +13,7 @@ export const getOrCreateStripeCustomerIdForUser = async ({
 }) => {
   const user = await prisma.user.findUnique({
     where: {
-      id: userId,
+      userId: userId,
     },
   });
 
@@ -36,7 +36,7 @@ export const getOrCreateStripeCustomerIdForUser = async ({
   // update with new customer id
   const updatedUser = await prisma.user.update({
     where: {
-      id: userId,
+      userId: userId,
     },
     data: {
       stripeCustomerId: customer.id,
@@ -67,7 +67,7 @@ export const handleInvoicePaid = async ({
   // update user with subscription data
   await prisma.user.update({
     where: {
-      id: userId,
+      userId: userId,
     },
     data: {
       stripeSubscriptionId: subscription.id,
@@ -89,7 +89,7 @@ export const handleSubscriptionCreatedOrUpdated = async ({
   // update user with subscription data
   await prisma.user.update({
     where: {
-      id: userId,
+      userId: userId,
     },
     data: {
       stripeSubscriptionId: subscription.id,
@@ -111,7 +111,7 @@ export const handleSubscriptionCanceled = async ({
   // remove subscription data from user
   await prisma.user.update({
     where: {
-      id: userId,
+      userId: userId,
     },
     data: {
       stripeSubscriptionId: null,
