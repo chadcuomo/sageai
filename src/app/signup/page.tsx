@@ -1,14 +1,13 @@
 import Link from 'next/link'
-import Messages from './messages'
+import Messages from '../login/messages'
 
-export default function Login() {
+export default function Signup() {
   return (
     <div className="flex-1 flex flex-col w-full px-8 justify-center gap-2 h-full items-center">
-     
 
       <form
         className="max-w-sm flex-1 flex flex-col w-full justify-center gap-2 text-foreground"
-        action="/api/auth/sign-in"
+        action="/api/auth/sign-up"
         method="post"
       >
         <label className="text-md" htmlFor="email">
@@ -30,19 +29,21 @@ export default function Login() {
           placeholder="••••••••"
           required
         />
-         <button
+        <button
           className="border bg-black text-white border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
         >
-          Sign in
+          Sign up
         </button>
         <Messages />
         <p>
-        Need to create an account?
-      <Link href="/signup" className='ml-1 text-blue-600 underline'>
-        Sign up
+        Already have an account?
+      <Link href="/login" className='ml-1 text-blue-600 underline'>
+        Login
         </Link>
         </p>
       </form>
+     
+
     </div>
   )
 }

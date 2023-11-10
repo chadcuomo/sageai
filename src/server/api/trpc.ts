@@ -6,12 +6,16 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
-import { type NextRequest } from "next/server";
+import { TRPCError, initTRPC } from "@trpc/server";
+import { NextResponse, type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "~/server/db";
+import { stripe } from "~/server/stripe/client";
+import { createClient } from '~/app/utils/supabase/server'
+import { cookies } from 'next/headers'
+import { type User } from "@supabase/supabase-js";
 
 /**
  * 1. CONTEXT
@@ -23,6 +27,9 @@ import { db } from "~/server/db";
 
 interface CreateContextOptions {
   headers: Headers;
+  auth: User | null;
+  req: NextRequest;
+  res: NextResponse;
 }
 
 /**
@@ -39,6 +46,10 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
     headers: opts.headers,
     db,
+    stripe,
+    auth: opts.auth,
+    req: opts.req,
+    res: opts.res,
   };
 };
 
@@ -48,11 +59,19 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (opts: { req: NextRequest }) => {
+export const createTRPCContext = async (opts: { req: NextRequest, res: NextResponse }) => {
   // Fetch stuff that depends on the request
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   return createInnerTRPCContext({
     headers: opts.req.headers,
+    auth: user,
+    req: opts.req,
+    res: opts.res,
   });
 };
 
@@ -78,6 +97,18 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 
+const isAuthed = t.middleware(({ next, ctx }) => {
+  
+  if (!ctx.auth) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
+  }
+  return next({
+    ctx: {
+      auth: ctx.auth,
+    },
+  });
+});
+
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
  *
@@ -100,3 +131,4 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+export const protectedProcedure = t.procedure.use(isAuthed);
