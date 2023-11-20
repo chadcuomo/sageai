@@ -20,6 +20,7 @@ model User {
     stripeCustomerId         String?
     stripeSubscriptionId     String?
     stripeSubscriptionStatus StripeSubscriptionStatus?
+    bookSessions             BookSession[]
 }
 
 enum StripeSubscriptionStatus {
@@ -53,9 +54,66 @@ model StripeEvent {
     livemode         Boolean
     pending_webhooks Int
 }
+
 model Book {
-    id  String @id @default(cuid())
-    bookTitle String
-    author String
-    image String
+    id           String        @id @default(cuid())
+    bookTitle    String
+    author       String
+    image        String
+    summary      String
+    chapters     Chapter[]
+    bookSessions BookSession[]
+}
+
+model Chapter {
+    id              String           @id @default(cuid())
+    chapterTitle    String
+    chapterNumber   Int
+    book            Book             @relation(fields: [bookId], references: [id])
+    bookId          String
+    chapterSessions ChapterSession[]
+}
+
+model BookSession {
+    id              String           @id @default(cuid())
+    user            User             @relation(fields: [userId], references: [id])
+    userId          String
+    book            Book             @relation(fields: [bookId], references: [id])
+    bookId          String
+    progress        Int // Represents the last chapter number the user has interacted with
+    // Add any additional fields relevant to a book session
+    chapterSessions ChapterSession[]
+}
+
+model ChapterSession {
+    id            String       @id @default(cuid())
+    bookSession   BookSession  @relation(fields: [bookSessionId], references: [id])
+    bookSessionId String
+    chapter       Chapter      @relation(fields: [chapterId], references: [id])
+    chapterId     String
+    summary       String?
+    actionItems   ActionItem[]
+    messages      Message[]
+}
+
+model Message {
+    id               String         @id @default(cuid())
+    chapterSession   ChapterSession @relation(fields: [chapterSessionId], references: [id])
+    chapterSessionId String
+    content          String
+    createdAt        DateTime       @default(now())
+    // Consider adding a field to distinguish between user and AI messages
+}
+
+model ActionItem {
+    id               String           @id @default(cuid())
+    actionItem       String
+    chapterSession   ChapterSession   @relation(fields: [chapterSessionId], references: [id])
+    chapterSessionId String
+    actionItemStatus ActionItemStatus
+}
+
+enum ActionItemStatus {
+    incomplete
+    complete
 }

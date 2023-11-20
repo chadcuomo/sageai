@@ -1,13 +1,17 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
-    createUser: publicProcedure
+  createUser: publicProcedure
     .input(
       z.object({
         userId: z.string(),
         email: z.string() || undefined,
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
@@ -21,27 +25,30 @@ export const userRouter = createTRPCRouter({
         console.log(error);
       }
     }),
-    getUser: protectedProcedure.query(async ({ ctx }) => {
-        const { auth, db } = ctx;
-    
-        if (!auth) {
-            throw new Error("Not authenticated");
-        }
-    
-        const data = await db.user.findUnique({
-            where: {
-            userId: auth.id,
-            },
-        });
-    
-        if (!data) {
-            throw new Error("Could not find user");
-        }
-    
-        return data;
-        }),
+  getUser: protectedProcedure.query(async ({ ctx }) => {
+    const { auth, db } = ctx;
+
+    if (!auth) {
+      throw new Error("Not authenticated");
+    }
+
+    const data = await db.user.findUnique({
+      where: {
+        userId: auth.id,
+      },
+      include: {
+        bookSessions: true,
+      },
+    });
+
+    if (!data) {
+      throw new Error("Could not find user");
+    }
+
+    return data;
+  }),
   subscriptionStatus: publicProcedure.query(async ({ ctx }) => {
-    const { auth, db} = ctx;
+    const { auth, db } = ctx;
 
     if (!auth) {
       throw new Error("Not authenticated");

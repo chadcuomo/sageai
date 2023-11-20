@@ -20,16 +20,24 @@ export default function Message({ message }: MessageProps): JSX.Element {
     >
       <div className="w-full max-w-2xl py-14">
         <div className="flex items-center">
-          <div className="flex h-full items-center mr-10">
-            <span className={`text-lg font-regular w-7 h-7 flex justify-center items-center ${role === 'assistant' ? 'border-black border' : 'text-white bg-black'}`}>
-                {role === "assistant" ? "s" : "k"}
+          <div className="mr-10 flex h-full items-center">
+            <span
+              className={`font-regular flex h-7 w-7 items-center justify-center text-lg ${
+                role === "assistant"
+                  ? "border border-black"
+                  : "bg-black text-white"
+              }`}
+            >
+              {role === "assistant" ? "s" : "k"}
             </span>
           </div>
-          <p className="text-sm leading-relaxed pr-3">
-          {content}
+          <p
+            style={{ whiteSpace: "pre-wrap" }}
+            className="pr-3 text-sm leading-relaxed"
+          >
+            {content}
           </p>
         </div>
-        
       </div>
     </div>
   );

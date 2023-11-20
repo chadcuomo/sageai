@@ -1,40 +1,36 @@
-import { Configuration, OpenAIApi } from 'openai-edge'
-import { Message, OpenAIStream, StreamingTextResponse } from 'ai'
-import { getContext } from '~/app/utils/context'
-import { env } from '~/env.mjs'
+import { Configuration, OpenAIApi } from "openai-edge";
+import { type Message, OpenAIStream, StreamingTextResponse } from "ai";
+import { getContext } from "~/app/utils/context";
+import { env } from "~/env.mjs";
 
 // Create an OpenAI API client (that's edge friendly!)
 const config = new Configuration({
-  apiKey: env.OPENAI_API_KEY
-})
-const openai = new OpenAIApi(config)
+  apiKey: env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(config);
 
 // IMPORTANT! Set the runtime to edge
-export const runtime = 'edge'
+export const runtime = "edge";
 
 export async function POST(req: Request) {
   try {
+    const { messages, book, author, number, chapter } = await req.json();
 
-    const { messages, book, author } = await req.json()
-
-    console.log(messages)
+    console.log(messages);
 
     // Get the last message
-    const lastMessage = messages[messages.length - 1]
+    const lastMessage = messages[messages.length - 1];
 
     // Get the context from the last message
 
-    const context = await getContext(lastMessage.content, '', book)
-
-    
-
+    const context = await getContext(lastMessage.content, "", book);
 
     const prompt = [
       {
-        role: 'system',
+        role: "system",
         content: `AI assistant is a brand new, powerful, human-like artificial intelligence.
       The traits of AI include expert knowledge, helpfulness, cleverness, and articulateness.
-      AI is tasked with disussing the book ${book} by ${author} with the user.
+      AI is tasked with disussing chapter ${number} - ${chapter} from the book ${book} by ${author} with the user.
       AI has all knowledge of the book being discussed.
       AI is a well-behaved and well-mannered individual.
       AI is always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
@@ -49,20 +45,23 @@ export async function POST(req: Request) {
       AI assistant will not invent anything that is not drawn directly from the context.
       `,
       },
-    ]
+    ];
 
     // Ask OpenAI for a streaming chat completion given the prompt
     const response = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+      model: "gpt-3.5-turbo",
       stream: true,
-      messages: [...prompt, ...messages.filter((message: Message) => message.role === 'user')]
-    })
+      messages: [
+        ...prompt,
+        ...messages.filter((message: Message) => message.role === "user"),
+      ],
+    });
     // Convert the response into a friendly text-stream
-    const stream = OpenAIStream(response)
+    const stream = OpenAIStream(response);
     // Respond with the stream
-    return new StreamingTextResponse(stream)
+    return new StreamingTextResponse(stream);
   } catch (e) {
-    throw (e)
+    throw e;
   }
 }
 
